@@ -4,7 +4,7 @@ import Anthropic from '@anthropic-ai/sdk';
 const anthropic = process.env.CLAUDE_API_KEY ? new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
 }) : new Anthropic({
-  apiKey: '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',
+  apiKey: '',
 });
 
 export class AIService {
