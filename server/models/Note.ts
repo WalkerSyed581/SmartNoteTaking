@@ -28,7 +28,7 @@ const noteSchema = new Schema<INote>({
   },
   aiSummary: {
     type: String,
-    maxlength: 1000
+    maxlength: 2000
   },
   tags: [{
     type: String,

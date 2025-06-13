@@ -26,25 +26,26 @@ export class AIService {
 
       const response = await anthropic.messages.create({
         model: 'claude-3-haiku-20240307',
-        max_tokens: 250,
+        max_tokens: 500,
         messages: [{
           role: 'user',
-          content: `Please create a concise summary of the following note for spaced repetition learning. The summary must be EXACTLY 200 characters or less (including spaces and punctuation). Focus on the most important concepts, key ideas, and essential details that would be valuable for quick review. Make it clear, actionable, and perfect for study purposes.
+          content: `Please create a comprehensive but concise summary of the following note for spaced repetition learning. The summary should be informative and capture all key concepts, important details, and essential information that would be valuable for review and study.
 
 ${fullContent}
 
 Requirements:
-- Maximum 200 characters (count carefully)
-- Include the most critical information
-- Make it suitable for quick review
-- Focus on key concepts and main ideas`
+- Be comprehensive yet concise (aim for 300-500 characters)
+- Include all important concepts and key ideas
+- Make it suitable for effective review and study
+- Focus on actionable insights and core knowledge
+- Ensure clarity and readability`
         }]
       });
 
       const summary = response.content[0]?.type === 'text' ? response.content[0].text : '';
       
-      // Ensure the summary is within 200 characters
-      const trimmedSummary = summary.length > 200 ? summary.substring(0, 197) + '...' : summary;
+      // Allow longer summaries but cap at reasonable length for display
+      const trimmedSummary = summary.length > 800 ? summary.substring(0, 797) + '...' : summary;
       
       return trimmedSummary || this.generateMockSummary(content, title, tags);
     } catch (error) {
@@ -54,10 +55,10 @@ Requirements:
   }
 
   private static generateMockSummary(content: string, title?: string, tags?: string[]): string {
-    // Enhanced fallback summary generation with 200 character limit
+    // Enhanced fallback summary generation with longer limit
     const cleanContent = content.trim();
-    const titlePart = title ? title.substring(0, 50) : '';
-    const tagsPart = tags && tags.length > 0 ? tags.slice(0, 3).join(', ') : '';
+    const titlePart = title ? title.substring(0, 100) : '';
+    const tagsPart = tags && tags.length > 0 ? tags.slice(0, 5).join(', ') : '';
     
     let summary = '';
     
@@ -65,28 +66,28 @@ Requirements:
       summary += titlePart;
     }
     
-    if (tagsPart && summary.length < 150) {
-      summary += (summary ? ' | ' : '') + tagsPart;
+    if (tagsPart && summary.length < 300) {
+      summary += (summary ? ' | Tags: ' : 'Tags: ') + tagsPart;
     }
     
-    const remainingChars = 200 - summary.length;
-    if (remainingChars > 20 && cleanContent.length > 0) {
-      const contentPreview = cleanContent.substring(0, remainingChars - 5);
-      summary += (summary ? ' - ' : '') + contentPreview;
-      if (cleanContent.length > remainingChars - 5) {
+    const remainingChars = 500 - summary.length;
+    if (remainingChars > 50 && cleanContent.length > 0) {
+      const contentPreview = cleanContent.substring(0, remainingChars - 10);
+      summary += (summary ? '. Summary: ' : '') + contentPreview;
+      if (cleanContent.length > remainingChars - 10) {
         summary += '...';
       }
     }
     
     // Fallback if still empty
     if (!summary) {
-      summary = cleanContent.length < 50 
-        ? "Brief note - key info for review." 
-        : cleanContent.substring(0, 197) + '...';
+      summary = cleanContent.length < 100 
+        ? "Brief note containing key information for review and study." 
+        : cleanContent.substring(0, 497) + '...';
     }
     
-    // Ensure exactly 200 characters or less
-    return summary.length > 200 ? summary.substring(0, 197) + '...' : summary;
+    // Ensure reasonable length for display
+    return summary.length > 800 ? summary.substring(0, 797) + '...' : summary;
   }
   
 

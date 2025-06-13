@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React.js Component Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .diagram-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 26px;
+            font-weight: bold;
+            color: #61dafb;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #61dafb;
+            padding-bottom: 10px;
+        }
+        
+        .react-logo {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 30px;
+        }
+        
+        .layer {
+            margin: 25px 0;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .app-layer {
+            background: linear-gradient(135deg, #61dafb, #21a0c4);
+            color: white;
+        }
+        
+        .components-layer {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+        
+        .state-layer {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+        
+        .dom-layer {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+        
+        .layer-title {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .component-box {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .component-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .component-box:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .component-box:hover::before {
+            left: 100%;
+        }
+        
+        .component-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .component-desc {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+        
+        .app-structure {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .main-components {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .secondary-components {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .hooks-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .hook-box {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            min-width: 120px;
+            position: relative;
+        }
+        
+        .hook-box:hover {
+            transform: scale(1.05);
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .dom-features {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .feature-box {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .feature-box:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .connection-line {
+            height: 2px;
+            background: linear-gradient(90deg, #61dafb, #4ecdc4);
+            margin: 10px 0;
+            border-radius: 1px;
+            position: relative;
+        }
+        
+        .connection-line::after {
+            content: '↓';
+            position: absolute;
+            right: -10px;
+            top: -12px;
+            font-size: 20px;
+            color: #61dafb;
+        }
+        
+        @media (max-width: 768px) {
+            .main-components,
+            .secondary-components {
+                grid-template-columns: 1fr;
+            }
+            
+            .app-structure {
+                flex-direction: column;
+            }
+            
+            .hooks-container,
+            .dom-features {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <div class="title">
+            <span class="react-logo">⚛️</span>
+            REACT.JS ARCHITECTURE
+        </div>
+        
+        <div class="layer app-layer">
+            <div class="layer-title">React Application</div>
+            <div class="app-structure">
+                <div class="component-box">
+                    <div class="component-name">App Component</div>
+                    <div class="component-desc">Root component managing global state and routing</div>
+                </div>
+            </div>
+            <div class="components-grid">
+                <div class="component-box">
+                    <div class="component-name">Header</div>
+                    <div class="component-desc">Navigation & User Menu</div>
+                </div>
+                <div class="component-box">
+                    <div class="component-name">Main Content</div>
+                    <div class="component-desc">Dynamic content area</div>
+                </div>
+                <div class="component-box">
+                    <div class="component-name">Footer</div>
+                    <div class="component-desc">App info & links</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="connection-line"></div>
+        
+        <div class="layer components-layer">
+            <div class="layer-title">Main Components</div>
+            <div class="main-components">
+                <div class="component-box">
+                    <div class="component-name">NoteEditor</div>
+                    <div class="component-desc">Rich text editing interface</div>
+                </div>
+                <div class="component-box">
+                    <div class="component-name">NotesGrid</div>
+                    <div class="component-desc">Note display & organization</div>
+                </div>
+                <div class="component-box">
+                    <div class="component-name">ReviewPanel</div>
+                    <div class="component-desc">Spaced repetition interface</div>
+                </div>
+            </div>
+            <div class="secondary-components">
+                <div class="component-box">
+                    <div class="component-name">MindMap</div>
+                    <div class="component-desc">Visual knowledge mapping</div>
+                </div>
+                <div class="component-box">
+                    <div class="component-name">Search</div>
+                    <div class="component-desc">Intelligent search functionality</div>
+                </div>
+                <div class="component-box">
+                    <div class="component-name">Settings</div>
+                    <div class="component-desc">User preferences & config</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="connection-line"></div>
+        
+        <div class="layer state-layer">
+            <div class="layer-title">State Management</div>
+            <div class="hooks-container">
+                <div class="hook-box">
+                    <div class="component-name">useState</div>
+                    <div class="component-desc">Local component state</div>
+                </div>
+                <div class="hook-box">
+                    <div class="component-name">useContext</div>
+                    <div class="component-desc">Global state sharing</div>
+                </div>
+                <div class="hook-box">
+                    <div class="component-name">useReducer</div>
+                    <div class="component-desc">Complex state logic</div>
+                </div>
+                <div class="hook-box">
+                    <div class="component-name">useEffect</div>
+                    <div class="component-desc">Side effects & lifecycle</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="connection-line"></div>
+        
+        <div class="layer dom-layer">
+            <div class="layer-title">Virtual DOM</div>
+            <div class="dom-features">
+                <div class="feature-box">
+                    <div class="component-name">Component Tree</div>
+                    <div class="component-desc">Hierarchical component structure</div>
+                </div>
+                <div class="feature-box">
+                    <div class="component-name">Diffing Algorithm</div>
+                    <div class="component-desc">Efficient change detection</div>
+                </div>
+                <div class="feature-box">
+                    <div class="component-name">Efficient Re-rendering</div>
+                    <div class="component-desc">Optimized DOM updates</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
