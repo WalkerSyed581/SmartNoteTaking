@@ -1,9 +1,15 @@
 import React from 'react';
-import { X, FileText, Tag, Calendar, Brain, Users, TrendingUp } from 'lucide-react';
-import { Note } from '../types/Note';
-import { MindMapNode } from '../types/MindMap';
-import { getNotesForTag } from '../utils/mindMapUtils';
+import { X, FileText, Tag, TrendingUp, Users, Brain, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { Note } from '../types/Note';
+import { getNotesForTag } from '../utils/mindMapUtils';
+
+interface MindMapNode {
+  id: string;
+  label: string;
+  size: number;
+  color: string;
+}
 
 interface MindMapNodeModalProps {
   selectedNode: MindMapNode;
@@ -20,6 +26,16 @@ export const MindMapNodeModal: React.FC<MindMapNodeModalProps> = ({
   onNoteClick,
   relatedTags
 }) => {
+  const [expandedNotes, setExpandedNotes] = React.useState<Record<string, boolean>>({});
+  const summaryLimit = 150; // Characters to show before "Show more" (smaller for compact view)
+  
+  const toggleExpanded = (noteId: string) => {
+    setExpandedNotes(prev => ({
+      ...prev,
+      [noteId]: !prev[noteId]
+    }));
+  };
+
   // Get notes associated with this tag
   const tagNotes = getNotesForTag(notes, selectedNode.label);
   const recentNotes = tagNotes
@@ -85,60 +101,82 @@ export const MindMapNodeModal: React.FC<MindMapNodeModalProps> = ({
               </div>
               
               <div className="space-y-3">
-                {recentNotes.map((note) => (
-                  <div
-                    key={note._id}
-                    onClick={() => onNoteClick(note)}
-                    className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer border border-gray-200 dark:border-gray-600"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-gray-900 dark:text-white line-clamp-1">
-                        {note.title}
-                      </h4>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">
-                        {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
-                      </span>
+                {recentNotes.map((note) => {
+                  const isExpanded = expandedNotes[note._id] || false;
+                  const needsExpansion = note.aiSummary && note.aiSummary.length > summaryLimit;
+                  
+                  return (
+                    <div
+                      key={note._id}
+                      onClick={() => onNoteClick(note)}
+                      className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer border border-gray-200 dark:border-gray-600"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium text-gray-900 dark:text-white line-clamp-1">
+                          {note.title}
+                        </h4>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">
+                          {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                      
+                      {note.aiSummary && (
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md p-3 mb-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center space-x-2">
+                              <Brain className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                              <span className="text-xs font-medium text-blue-700 dark:text-blue-300">AI Summary</span>
+                            </div>
+                            {needsExpansion && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleExpanded(note._id);
+                                }}
+                                className="flex items-center space-x-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                              >
+                                <span>{isExpanded ? 'Less' : 'More'}</span>
+                                {isExpanded ? <ChevronUp className="w-2 h-2" /> : <ChevronDown className="w-2 h-2" />}
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-xs text-blue-600 dark:text-blue-300">
+                            {needsExpansion && !isExpanded 
+                              ? `${note.aiSummary.substring(0, summaryLimit)}...`
+                              : note.aiSummary
+                            }
+                          </p>
+                        </div>
+                      )}
+                      
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                        {note.content.substring(0, 120)}
+                        {note.content.length > 120 && '...'}
+                      </p>
+                      
+                      {note.tags.length > 1 && (
+                        <div className="flex items-center space-x-1">
+                          <Tag className="w-3 h-3 text-gray-400" />
+                          <div className="flex flex-wrap gap-1">
+                            {note.tags.filter(tag => tag !== selectedNode.label).slice(0, 3).map((tag, index) => (
+                              <span
+                                key={index}
+                                className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs rounded"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {note.tags.filter(tag => tag !== selectedNode.label).length > 3 && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                +{note.tags.filter(tag => tag !== selectedNode.label).length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    
-                    {note.aiSummary && (
-                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md p-3 mb-2">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <Brain className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                          <span className="text-xs font-medium text-blue-700 dark:text-blue-300">AI Summary</span>
-                        </div>
-                        <p className="text-xs text-blue-600 dark:text-blue-300 line-clamp-2">
-                          {note.aiSummary}
-                        </p>
-                      </div>
-                    )}
-                    
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
-                      {note.content.substring(0, 120)}
-                      {note.content.length > 120 && '...'}
-                    </p>
-                    
-                    {note.tags.length > 1 && (
-                      <div className="flex items-center space-x-1">
-                        <Tag className="w-3 h-3 text-gray-400" />
-                        <div className="flex flex-wrap gap-1">
-                          {note.tags.filter(tag => tag !== selectedNode.label).slice(0, 3).map((tag, index) => (
-                            <span
-                              key={index}
-                              className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs rounded"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                          {note.tags.filter(tag => tag !== selectedNode.label).length > 3 && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              +{note.tags.filter(tag => tag !== selectedNode.label).length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               
               {tagNotes.length === 0 && (

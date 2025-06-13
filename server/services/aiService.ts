@@ -45,7 +45,7 @@ Requirements:
       const summary = response.content[0]?.type === 'text' ? response.content[0].text : '';
       
       // Allow longer summaries but cap at reasonable length for display
-      const trimmedSummary = summary.length > 800 ? summary.substring(0, 797) + '...' : summary;
+      const trimmedSummary = summary.length > 800 ? summary.substring(0, 800) : summary;
       
       return trimmedSummary || this.generateMockSummary(content, title, tags);
     } catch (error) {
@@ -74,20 +74,17 @@ Requirements:
     if (remainingChars > 50 && cleanContent.length > 0) {
       const contentPreview = cleanContent.substring(0, remainingChars - 10);
       summary += (summary ? '. Summary: ' : '') + contentPreview;
-      if (cleanContent.length > remainingChars - 10) {
-        summary += '...';
-      }
     }
     
     // Fallback if still empty
     if (!summary) {
       summary = cleanContent.length < 100 
         ? "Brief note containing key information for review and study." 
-        : cleanContent.substring(0, 497) + '...';
+        : cleanContent.substring(0, 500);
     }
     
     // Ensure reasonable length for display
-    return summary.length > 800 ? summary.substring(0, 797) + '...' : summary;
+    return summary.length > 800 ? summary.substring(0, 800) : summary;
   }
   
 

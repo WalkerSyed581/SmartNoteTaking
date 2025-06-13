@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock, Tag, Brain, Archive, Trash2, Eye } from 'lucide-react';
+import { Clock, Tag, Brain, Archive, Trash2, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { Note } from '../types/Note';
 
 interface NoteCardProps {
@@ -36,6 +36,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onMarkReviewed
 }) => {
   const isOverdue = new Date(note.nextReviewDate) <= new Date() && note.reviewLevel < 5;
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  
+  const summaryLimit = 200; // Characters to show before "Show more"
+  const needsExpansion = note.aiSummary && note.aiSummary.length > summaryLimit;
 
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${
@@ -70,11 +74,30 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         {/* AI Summary - Show prominently if available */}
         {note.aiSummary && (
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Brain className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-sm font-medium text-blue-800 dark:text-blue-300">AI Summary</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Brain className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-800 dark:text-blue-300">AI Summary</span>
+              </div>
+              {needsExpansion && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(!isExpanded);
+                  }}
+                  className="flex items-center space-x-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                >
+                  <span>{isExpanded ? 'Show less' : 'Show more'}</span>
+                  {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              )}
             </div>
-            <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">{note.aiSummary}</p>
+            <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
+              {needsExpansion && !isExpanded 
+                ? `${note.aiSummary.substring(0, summaryLimit)}...`
+                : note.aiSummary
+              }
+            </p>
           </div>
         )}
 

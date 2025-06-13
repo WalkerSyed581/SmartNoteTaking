@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Clock, Brain, CheckCircle } from 'lucide-react';
+import { X, Clock, Brain, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Note } from '../types/Note';
 
@@ -30,6 +30,16 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   onMarkReviewed,
   onClose
 }) => {
+  const [expandedNotes, setExpandedNotes] = React.useState<Record<string, boolean>>({});
+  const summaryLimit = 200; // Characters to show before "Show more"
+  
+  const toggleExpanded = (noteId: string) => {
+    setExpandedNotes(prev => ({
+      ...prev,
+      [noteId]: !prev[noteId]
+    }));
+  };
+
   if (notes.length === 0) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -72,6 +82,8 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           {notes.map((note) => {
             const isOverdue = new Date(note.nextReviewDate) <= new Date();
             const overdueTime = isOverdue ? formatDistanceToNow(new Date(note.nextReviewDate), { addSuffix: true }) : null;
+            const isExpanded = expandedNotes[note._id] || false;
+            const needsExpansion = note.aiSummary && note.aiSummary.length > summaryLimit;
 
             return (
               <div
@@ -87,11 +99,27 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                     {/* AI Summary - Prominent display */}
                     {note.aiSummary && (
                       <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-3">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Brain className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          <span className="text-sm font-medium text-blue-800 dark:text-blue-300">AI Summary</span>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <Brain className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <span className="text-sm font-medium text-blue-800 dark:text-blue-300">AI Summary</span>
+                          </div>
+                          {needsExpansion && (
+                            <button
+                              onClick={() => toggleExpanded(note._id)}
+                              className="flex items-center space-x-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                            >
+                              <span>{isExpanded ? 'Show less' : 'Show more'}</span>
+                              {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                            </button>
+                          )}
                         </div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">{note.aiSummary}</p>
+                        <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
+                          {needsExpansion && !isExpanded 
+                            ? `${note.aiSummary.substring(0, summaryLimit)}...`
+                            : note.aiSummary
+                          }
+                        </p>
                       </div>
                     )}
                     
